@@ -1,0 +1,38 @@
+# Docker
+.docker.xauth
+
+# Workspace files
+workspace/*
+!workspace/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# GNU Radio
+*.pyc
+*.grc~
+*.grc.bak
+
+# PDW data files
+*.hdf5
+*.h5
+*.dat
+
+# Logs
+*.log

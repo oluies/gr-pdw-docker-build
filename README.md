@@ -19,6 +19,16 @@ This Docker environment provides a complete setup for compiling and using gr-pdw
 
 ## Building the Docker Image
 
+### ⚠️ DNS Issues?
+
+If you get "Temporary failure resolving" errors during build, see **DNS_FIX.md** for quick solutions or **TROUBLESHOOTING.md** for detailed fixes.
+
+**Quick fix:**
+```bash
+echo '{"dns": ["8.8.8.8", "8.8.4.4"]}' | sudo tee /etc/docker/daemon.json
+sudo systemctl restart docker
+```
+
 ### Option 1: Using Docker Compose (Recommended)
 
 ```bash

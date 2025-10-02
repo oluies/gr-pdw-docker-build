@@ -1,5 +1,24 @@
 # gr-pdw Docker Environment - Setup Instructions
 
+## ⚠️ DNS Issue? Read This First!
+
+If you get "Temporary failure resolving 'archive.ubuntu.com'" error, you need to configure Docker DNS:
+
+```bash
+# Quick fix (Linux):
+echo '{"dns": ["8.8.8.8", "8.8.4.4"]}' | sudo tee /etc/docker/daemon.json
+sudo systemctl restart docker
+```
+
+**OR** use the simple Dockerfile:
+```bash
+docker build -f Dockerfile.simple -t gr-pdw:latest .
+```
+
+See **TROUBLESHOOTING.md** for more solutions.
+
+---
+
 ## 📋 Files Included
 
 - `Dockerfile` - Docker image definition
@@ -13,16 +32,28 @@
 
 ## ⚡ Quick Setup (3 Commands)
 
+**Recommended for first-time users:**
+
 ```bash
 # 1. Make the script executable
 chmod +x gr-pdw.sh
 
-# 2. Build the Docker image (15-30 min)
-./gr-pdw.sh build
+# 2. Build using the simple Dockerfile (2-5 minutes, fewer issues)
+docker build -f Dockerfile.simple -t gr-pdw:latest .
 
 # 3. Run it!
 ./gr-pdw.sh run
 ```
+
+**OR use the full build (15-30 minutes, more control):**
+
+```bash
+chmod +x gr-pdw.sh
+./gr-pdw.sh build  # Uses Dockerfile (full build)
+./gr-pdw.sh run
+```
+
+See **DOCKERFILE_COMPARISON.md** to choose which is right for you.
 
 ## 📖 Documentation Guide
 

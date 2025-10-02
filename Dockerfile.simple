@@ -1,0 +1,44 @@
+FROM gnuradio/gnuradio:3.10
+
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV GRC_BLOCKS_PATH=/usr/local/share/gnuradio/grc/blocks
+ENV PYTHONPATH=/usr/local/lib/python3/dist-packages:/usr/local/lib/python3.10/dist-packages:$PYTHONPATH
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
+# Install additional dependencies needed for gr-pdw
+RUN apt-get update && apt-get install -y \
+    python3-h5py \
+    git \
+    cmake \
+    build-essential \
+    vim \
+    nano \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Build and install gr-pdw
+WORKDIR /tmp
+RUN git clone https://github.com/gtri/gr-pdw.git && \
+    cd gr-pdw && \
+    mkdir build && cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig && \
+    cd /tmp && rm -rf gr-pdw
+
+# Create working directory
+WORKDIR /workspace
+
+# Verify installations
+RUN python3 -c "import gnuradio; print('GNU Radio version:', gnuradio.version())" && \
+    python3 -c "import h5py; print('h5py installed successfully')" && \
+    python3 -c "import pdw; print('gr-pdw installed successfully')"
+
+# Default command
+CMD ["/bin/bash"]
