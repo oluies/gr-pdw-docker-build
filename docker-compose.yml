@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  gr-pdw:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gr-pdw:latest
+    container_name: gr-pdw
+    hostname: gr-pdw
+    
+    # For GUI applications (GNU Radio Companion)
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/tmp/.docker.xauth
+    
+    volumes:
+      # Mount current directory for working with files
+      - ./workspace:/workspace
+      # X11 socket for GUI
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # X authority for GUI
+      - ~/.Xauthority:/tmp/.docker.xauth:ro
+    
+    # Enable hardware access for USRP devices
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    
+    # Privileged mode for full hardware access (optional, use with caution)
+    privileged: false
+    
+    # Network mode for USRP network devices
+    network_mode: host
+    
+    # Keep container running
+    stdin_open: true
+    tty: true
+    
+    # Override command to keep running
+    command: /bin/bash
