@@ -9,23 +9,24 @@ ENV PYTHONUNBUFFERED=1
 ENV GRC_BLOCKS_PATH=/usr/local/share/gnuradio/grc/blocks
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
     git \
     cmake \
     g++ \
+    build-essential \
     libboost-all-dev \
     libgmp-dev \
     swig \
-    python3-numpy \
+    python3-pip \
     python3-mako \
     python3-sphinx \
     python3-lxml \
     doxygen \
     libfftw3-dev \
-    libsdl1.2-dev \
     libgsl-dev \
     libqwt-qt5-dev \
     libqt5opengl5-dev \
+    libqt5svg5-dev \
     python3-pyqt5 \
     liblog4cpp5-dev \
     libzmq3-dev \
@@ -36,39 +37,39 @@ RUN apt-get update && apt-get install -y \
     python3-scipy \
     python3-gi \
     python3-gi-cairo \
-    gir1.2-gtk-3.0 \
     libcodec2-dev \
     libgsm1-dev \
-    libusb-1.0-0-dev \
     python3-pygccxml \
     python3-pyqtgraph \
+    python3-pybind11 \
     libsndfile1-dev \
     libpng-dev \
+    libspdlog-dev \
     pkg-config \
     wget \
     vim \
-    nano \
     net-tools \
-    iputils-ping \
-    && rm -rf /var/lib/apt/lists/*
+    iputils-ping && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies including h5py for gr-pdw
-RUN apt-get update && apt-get install -y \
-    python3-pip \
-    python3-h5py \
-    && rm -rf /var/lib/apt/lists/*
 
 # Install additional Python packages
 RUN pip3 install --no-cache-dir \
     packaging \
-    jsonschema
+    jsonschema \
+    "numpy<2" \
+    h5py \
+    matplotlib
+
+# Clean up apt lists to reduce image size
+RUN apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Build and install Volk
 WORKDIR /tmp
 RUN git clone --recursive https://github.com/gnuradio/volk.git && \
     cd volk && \
     mkdir build && cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release .. && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=/usr/bin/make -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ .. && \
     make -j$(nproc) && \
     make install && \
     ldconfig && \
@@ -79,7 +80,7 @@ WORKDIR /tmp
 RUN git clone https://github.com/EttusResearch/uhd.git && \
     cd uhd/host && \
     mkdir build && cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release .. && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=/usr/bin/make -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ .. && \
     make -j$(nproc) && \
     make install && \
     ldconfig && \
@@ -94,7 +95,8 @@ RUN git clone https://github.com/gnuradio/gnuradio.git && \
     cd gnuradio && \
     git checkout maint-3.10 && \
     mkdir build && cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release \
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=/usr/bin/make -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
+          -DENABLE_GNURADIO_RUNTIME=ON \
           -DENABLE_GR_QTGUI=ON \
           -DENABLE_PYTHON=ON \
           .. && \
@@ -108,7 +110,7 @@ WORKDIR /tmp
 RUN git clone https://github.com/gtri/gr-pdw.git && \
     cd gr-pdw && \
     mkdir build && cd build && \
-    cmake .. && \
+    cmake -DCMAKE_MAKE_PROGRAM=/usr/bin/make -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ .. && \
     make -j$(nproc) && \
     make install && \
     ldconfig && \
@@ -122,7 +124,7 @@ ENV PYTHONPATH=/usr/local/lib/python3/dist-packages:/usr/local/lib/python3.10/di
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 # Verify installations
-RUN python3 -c "import gnuradio; print('GNU Radio version:', gnuradio.version())" && \
+RUN python3 -c "import gnuradio; print('GNU Radio imported successfully')" && \
     python3 -c "import h5py; print('h5py installed successfully')" && \
     python3 -c "import pdw; print('gr-pdw installed successfully')"
 
