@@ -101,7 +101,7 @@ jobs:
       - name: Smoke test
         run: |
           set -euo pipefail
-          docker run --rm gr-pdw:ci python3 -c "import gnuradio; print('gnuradio', gnuradio.version())"
+          docker run --rm gr-pdw:ci python3 -c "from gnuradio import gr; print('gnuradio', gr.version())"
           docker run --rm gr-pdw:ci python3 -c "import pdw; print('gr-pdw OK')"
           docker run --rm gr-pdw:ci python3 -c "import h5py, numpy; print('h5py', h5py.__version__, 'numpy', numpy.__version__)"
           docker run --rm gr-pdw:ci bash -lc 'command -v gnuradio-config-info && gnuradio-config-info --version'
