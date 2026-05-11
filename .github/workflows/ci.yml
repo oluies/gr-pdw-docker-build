@@ -55,6 +55,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      security-events: write
     steps:
       - uses: actions/checkout@v4
 
@@ -103,6 +104,26 @@ jobs:
           docker run --rm gr-pdw:ci python3 -c "import pdw; print('gr-pdw OK')"
           docker run --rm gr-pdw:ci python3 -c "import h5py, numpy; print('h5py', h5py.__version__, 'numpy', numpy.__version__)"
           docker run --rm gr-pdw:ci bash -lc 'command -v gnuradio-config-info && gnuradio-config-info --version'
+
+      # Trivy scans the built image for CVEs. Report-only for now (exit-code: 0)
+      # so noisy upstream advisories don't block merges. Tighten by raising
+      # exit-code to 1 once the baseline is clean.
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: gr-pdw:ci
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: Upload Trivy SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-image
 
       - name: Push image
         if: github.event_name != 'pull_request'
