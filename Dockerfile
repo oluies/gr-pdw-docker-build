@@ -108,7 +108,7 @@ RUN git clone --depth 1 --branch "${GNURADIO_REF}" https://github.com/gnuradio/g
  && rm -rf gnuradio
 
 # Build gr-pdw (GTRI Pulse Descriptor Word OOT module)
-ARG GR_PDW_REF=master
+ARG GR_PDW_REF=main
 RUN git clone --depth 1 --branch "${GR_PDW_REF}" https://github.com/gtri/gr-pdw.git \
  && cmake -S gr-pdw -B gr-pdw/build -G Ninja \
       -DCMAKE_BUILD_TYPE=Release \
