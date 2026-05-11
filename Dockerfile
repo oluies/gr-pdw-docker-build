@@ -92,8 +92,10 @@ RUN git clone --depth 1 --branch "${UHD_REF}" https://github.com/EttusResearch/u
 # UHD FPGA images (optional, useful with real USRP hardware)
 RUN uhd_images_downloader || true
 
-# Build GNU Radio 3.11 (maint-3.11)
-ARG GNURADIO_REF=maint-3.11
+# Build GNU Radio. maint-3.10 is the current stable line; upstream has no
+# maint-3.11 branch yet. Override with --build-arg GNURADIO_REF=main to track
+# the development trunk (likely incompatible with gr-pdw).
+ARG GNURADIO_REF=maint-3.10
 RUN git clone --depth 1 --branch "${GNURADIO_REF}" https://github.com/gnuradio/gnuradio.git \
  && cmake -S gnuradio -B gnuradio/build -G Ninja \
       -DCMAKE_BUILD_TYPE=Release \
