@@ -39,7 +39,8 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile.simple
-          ignore: DL3008,DL3013,DL3003
+          # DL3006: FROM uses an ARG with a tagged default; hadolint can't resolve it.
+          ignore: DL3008,DL3013,DL3003,DL3006
 
       - name: Lint shell scripts (shellcheck)
         uses: ludeeus/action-shellcheck@2.0.0
