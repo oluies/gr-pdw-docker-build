@@ -78,7 +78,7 @@ RUN git clone --depth 1 --recursive https://github.com/gnuradio/volk.git \
  && rm -rf volk
 
 # Build UHD (USRP hardware driver). Pin to a recent stable tag for reproducibility.
-ARG UHD_REF=v4.7.0.0
+ARG UHD_REF=v4.10.0.0
 RUN git clone --depth 1 --branch "${UHD_REF}" https://github.com/EttusResearch/uhd.git \
  && cmake -S uhd/host -B uhd/host/build -G Ninja \
       -DCMAKE_BUILD_TYPE=Release \
