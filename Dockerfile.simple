@@ -1,44 +1,41 @@
-FROM gnuradio/gnuradio:3.10
+# syntax=docker/dockerfile:1.7
+# Lightweight variant that builds gr-pdw on top of the upstream GNU Radio image.
+# Pin to a tag that exists on Docker Hub; override at build time if needed:
+#   docker build -f Dockerfile.simple --build-arg GNURADIO_IMAGE=gnuradio/gnuradio:3.10 .
+ARG GNURADIO_IMAGE=gnuradio/gnuradio:3.10
+FROM ${GNURADIO_IMAGE}
 
-# Prevent interactive prompts
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=UTC
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=UTC \
+    PYTHONUNBUFFERED=1 \
+    GRC_BLOCKS_PATH=/usr/local/share/gnuradio/grc/blocks \
+    LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV GRC_BLOCKS_PATH=/usr/local/share/gnuradio/grc/blocks
-ENV PYTHONPATH=/usr/local/lib/python3/dist-packages:/usr/local/lib/python3.10/dist-packages:$PYTHONPATH
-ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      python3-h5py \
+      git \
+      cmake \
+      ninja-build \
+      build-essential \
+      ca-certificates \
+      vim \
+      nano \
+      wget \
+ && rm -rf /var/lib/apt/lists/*
 
-# Install additional dependencies needed for gr-pdw
-RUN apt-get update && apt-get install -y \
-    python3-h5py \
-    git \
-    cmake \
-    build-essential \
-    vim \
-    nano \
-    wget \
-    && rm -rf /var/lib/apt/lists/*
-
-# Build and install gr-pdw
+ARG GR_PDW_REF=main
 WORKDIR /tmp
-RUN git clone https://github.com/gtri/gr-pdw.git && \
-    cd gr-pdw && \
-    mkdir build && cd build && \
-    cmake .. && \
-    make -j$(nproc) && \
-    make install && \
-    ldconfig && \
-    cd /tmp && rm -rf gr-pdw
+RUN git clone --depth 1 --branch "${GR_PDW_REF}" https://github.com/gtri/gr-pdw.git \
+ && cmake -S gr-pdw -B gr-pdw/build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+ && cmake --build gr-pdw/build -j"$(nproc)" \
+ && cmake --install gr-pdw/build \
+ && ldconfig \
+ && rm -rf gr-pdw
 
-# Create working directory
 WORKDIR /workspace
 
-# Verify installations
-RUN python3 -c "import gnuradio; print('GNU Radio version:', gnuradio.version())" && \
-    python3 -c "import h5py; print('h5py installed successfully')" && \
-    python3 -c "import pdw; print('gr-pdw installed successfully')"
+RUN python3 -c "import gnuradio; print('GNU Radio version:', gnuradio.version())" \
+ && python3 -c "import h5py; print('h5py installed successfully')" \
+ && python3 -c "import pdw; print('gr-pdw installed successfully')"
 
-# Default command
 CMD ["/bin/bash"]

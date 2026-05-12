@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/gr-pdw
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Dockerfile (hadolint)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          # DL3008: pin apt versions — impractical for a moving GNU Radio toolchain.
+          # DL3013: pin pip versions — we install via apt instead.
+          # DL3003: use WORKDIR — we keep historical RUN-with-cd in places.
+          ignore: DL3008,DL3013,DL3003
+
+      - name: Lint Dockerfile.simple (hadolint)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile.simple
+          # DL3006: FROM uses an ARG with a tagged default; hadolint can't resolve it.
+          ignore: DL3008,DL3013,DL3003,DL3006
+
+      - name: Lint shell scripts (shellcheck)
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: '.'
+          severity: warning
+
+  build:
+    name: Build & smoke-test
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=short
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+
+      - name: Build image (load locally for smoke test)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          load: true
+          push: false
+          tags: gr-pdw:ci
+          cache-from: type=gha,scope=gr-pdw
+          cache-to: type=gha,scope=gr-pdw,mode=max
+
+      - name: Smoke test
+        run: |
+          set -euo pipefail
+          docker run --rm gr-pdw:ci python3 -c "from gnuradio import gr; print('gnuradio', gr.version())"
+          docker run --rm gr-pdw:ci python3 -c "import pdw; print('gr-pdw OK')"
+          docker run --rm gr-pdw:ci python3 -c "import h5py, numpy; print('h5py', h5py.__version__, 'numpy', numpy.__version__)"
+          docker run --rm gr-pdw:ci bash -lc 'command -v gnuradio-config-info && gnuradio-config-info --version'
+
+      # Trivy scans the built image for CVEs. Report-only for now (exit-code: 0)
+      # so noisy upstream advisories don't block merges. Tighten by raising
+      # exit-code to 1 once the baseline is clean.
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: gr-pdw:ci
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: Upload Trivy SARIF to GitHub Security
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-image
+
+      - name: Push image
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=gr-pdw
+          cache-to: type=gha,scope=gr-pdw,mode=max
