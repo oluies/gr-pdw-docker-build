@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=UTC \
@@ -43,6 +43,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
       python3 \
       python3-dev \
       python3-pip \
+      python3-setuptools \
       python3-numpy \
       python3-scipy \
       python3-matplotlib \
