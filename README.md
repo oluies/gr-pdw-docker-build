@@ -6,6 +6,16 @@ This Docker environment provides a complete setup for compiling and using gr-pdw
 
 
 
+## Hands-on Example
+
+See **[EXAMPLE.md](EXAMPLE.md)** for an end-to-end walkthrough:
+
+- generate a simulated radar pulse train (headless gr-pdw flowgraph)
+- visualize PDW strip charts and a **Morlet CWT scalogram** of one pulse
+- store pulses with geometry in **DuckDB spatial**, attach a flight track, export GeoParquet + an interactive folium map
+
+Scripts: [`workspace/generate_pdw.py`](workspace/generate_pdw.py), [`workspace/visualize_pdw.py`](workspace/visualize_pdw.py), [`workspace/pdw_to_duckdb.py`](workspace/pdw_to_duckdb.py).
+
 ## What's Included
 
 - **GNU Radio 3.10** (maint branch)
