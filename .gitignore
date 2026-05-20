@@ -1,9 +1,13 @@
 # Docker
 .docker.xauth
 
-# Workspace files
+# Workspace files — keep scripts + sample images, ignore generated data
 workspace/*
 !workspace/.gitkeep
+!workspace/*.py
+!workspace/images/
+workspace/images/*.html
+!workspace/images/*.png
 
 # Python
 __pycache__/
