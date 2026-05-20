@@ -4,6 +4,13 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 
+# Cap parallel C++ compile jobs. Default 4 keeps memory under control during
+# UHD/GNU Radio builds and avoids `make jobserver: Bad file descriptor`
+# under Rosetta emulation. Override at build time:
+#   docker build --build-arg MAKE_JOBS=8 .
+ARG MAKE_JOBS=4
+ENV MAKE_JOBS=${MAKE_JOBS}
+
 # Set environment variables for GNU Radio
 ENV PYTHONUNBUFFERED=1
 ENV GRC_BLOCKS_PATH=/usr/local/share/gnuradio/grc/blocks
@@ -70,7 +77,7 @@ RUN git clone --recursive https://github.com/gnuradio/volk.git && \
     cd volk && \
     mkdir build && cd build && \
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=/usr/bin/make -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ .. && \
-    make -j$(nproc) && \
+    make -j${MAKE_JOBS:-4} && \
     make install && \
     ldconfig && \
     cd /tmp && rm -rf volk
@@ -81,7 +88,7 @@ RUN git clone https://github.com/EttusResearch/uhd.git && \
     cd uhd/host && \
     mkdir build && cd build && \
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_MAKE_PROGRAM=/usr/bin/make -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ .. && \
-    make -j$(nproc) && \
+    make -j${MAKE_JOBS:-4} && \
     make install && \
     ldconfig && \
     cd /tmp && rm -rf uhd
@@ -100,7 +107,7 @@ RUN git clone https://github.com/gnuradio/gnuradio.git && \
           -DENABLE_GR_QTGUI=ON \
           -DENABLE_PYTHON=ON \
           .. && \
-    make -j$(nproc) && \
+    make -j${MAKE_JOBS:-4} && \
     make install && \
     ldconfig && \
     cd /tmp && rm -rf gnuradio
@@ -111,7 +118,7 @@ RUN git clone https://github.com/gtri/gr-pdw.git && \
     cd gr-pdw && \
     mkdir build && cd build && \
     cmake -DCMAKE_MAKE_PROGRAM=/usr/bin/make -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ .. && \
-    make -j$(nproc) && \
+    make -j${MAKE_JOBS:-4} && \
     make install && \
     ldconfig && \
     cd /tmp && rm -rf gr-pdw
