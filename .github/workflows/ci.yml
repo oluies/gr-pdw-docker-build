@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Lint Dockerfile (hadolint)
-        uses: hadolint/hadolint-action@v3.3.0
+        uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: Dockerfile
           # DL3008: pin apt versions — impractical for a moving GNU Radio toolchain.
@@ -36,7 +36,7 @@ jobs:
           ignore: DL3008,DL3013,DL3003
 
       - name: Lint Dockerfile.simple (hadolint)
-        uses: hadolint/hadolint-action@v3.3.0
+        uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: Dockerfile.simple
           # DL3006: FROM uses an ARG with a tagged default; hadolint can't resolve it.
