@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "schedule": ["before 6am on monday"],
+  "timezone": "Europe/Stockholm",
+  "prConcurrentLimit": 5,
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Was the github-actions ecosystem in .github/dependabot.yml: weekly, limit 5, 'ci' commit prefix, labels dependencies + github-actions. Grouped into one PR, which Dependabot was not doing here.",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "semanticCommitType": "ci",
+      "addLabels": ["github-actions"]
+    },
+    {
+      "description": "Was the docker ecosystem: weekly, limit 5, 'docker' commit prefix, labels dependencies + docker.",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "groupName": "docker images",
+      "semanticCommitType": "docker",
+      "addLabels": ["docker"]
+    }
+  ]
+}
