@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.28
 # Lightweight variant that builds gr-pdw on top of the upstream GNU Radio image.
 # Pin to a tag that exists on Docker Hub; override at build time if needed:
 #   docker build -f Dockerfile.simple --build-arg GNURADIO_IMAGE=gnuradio/gnuradio:3.10 .
