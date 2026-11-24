@@ -1,8 +1,15 @@
 # syntax=docker/dockerfile:1.29
-# Lightweight variant that builds gr-pdw on top of the upstream GNU Radio image.
-# Pin to a tag that exists on Docker Hub; override at build time if needed:
-#   docker build -f Dockerfile.simple --build-arg GNURADIO_IMAGE=gnuradio/gnuradio:3.10 .
-ARG GNURADIO_IMAGE=gnuradio/gnuradio:3.10
+# Lightweight variant that builds gr-pdw on top of a prebuilt GNU Radio image.
+#
+# NOTE: there is no `gnuradio/gnuradio` repository on Docker Hub. The `gnuradio`
+# org only publishes CI/buildbot images (`gnuradio/ci-*`, `gnuradio/buildbot-*`),
+# none of which are meant as a runtime base. We therefore use the Libre Space
+# Foundation image, which tracks the GNU Radio 3.10 line, is Debian-based (so the
+# apt-get layers below work) and is still maintained.
+#
+# Override at build time if needed:
+#   docker build -f Dockerfile.simple --build-arg GNURADIO_IMAGE=librespace/gnuradio:3.10.5.1 .
+ARG GNURADIO_IMAGE=librespace/gnuradio:3.10.5.1
 FROM ${GNURADIO_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive \

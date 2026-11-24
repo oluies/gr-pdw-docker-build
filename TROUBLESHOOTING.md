@@ -235,7 +235,7 @@ sudo systemctl restart docker
 Instead of building from scratch, use a pre-configured base:
 
 ```dockerfile
-FROM gnuradio/gnuradio:3.10
+FROM librespace/gnuradio:3.10.5.1
 
 # Install additional dependencies for gr-pdw
 RUN apt-get update && apt-get install -y \
